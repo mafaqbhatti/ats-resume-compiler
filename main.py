@@ -174,6 +174,13 @@ SUMMARY_TEXT_HERE
   \item BULLET_1
 \end{itemize}
 
+\vspace{2pt}
+\projectHeading{PROJECT_4_NAME}{DATE}
+\begin{itemize}
+  \item BULLET_1
+\end{itemize}
+% NOTE: include PROJECT_4 only if a 4th genuinely relevant project exists in the skill bank
+
 % ==================== SKILLS ====================
 \section{Technical Skills}
 \begin{itemize}[leftmargin=0em, label={}, topsep=0pt]
@@ -206,19 +213,42 @@ STRICT RULES — VIOLATING ANY RULE = FAILURE
 3. USE THIS EXACT TEMPLATE STRUCTURE — same packages, same commands, same section order
 4. CONTENT RULES:
    - Extract candidate's real name, phone, email, LinkedIn, GitHub from MASTER RESUME
-   - Write a 2-line Summary targeting this exact JD using JD keywords
-   - Technical Skills: pick ONLY skills from SKILL BANK that appear or relate to the JD
-   - Work Experience: use real job from MASTER RESUME, rewrite bullets to match JD keywords
-   - Projects: pick TOP 3 most relevant to this JD from MASTER RESUME, rewrite descriptions with JD terms
+   - Write a 2-3 line Summary targeting this exact JD using JD keywords naturally
+   - Work Experience: use the real job(s) from MASTER RESUME, rewrite bullets to match JD keywords
    - Education: copy exactly from MASTER RESUME
-   - Achievements: copy Kaggle rank + certifications from MASTER RESUME
-5. BULLET WRITING RULES:
-   - Start every bullet with a strong action verb: Engineered, Architected, Deployed, Optimized, Designed, Built, Implemented, Automated, Developed
-   - Include metrics/numbers wherever they exist in the master resume
-   - Mirror exact terminology from JD (e.g. if JD says "agentic pipelines", use "agentic pipelines")
-   - Bold key technologies using \\textbf{{tech}}
-6. DO NOT INVENT data — only use info from SKILL BANK and MASTER RESUME
-7. MUST FIT ONE PAGE — be concise, no fluff, keep bullet points tight
+   - Achievements: copy Kaggle rank + certifications from MASTER RESUME exactly
+
+═══════════════════════════════════════════════════════════
+PROJECT SELECTION LOGIC (IMPORTANT — READ CAREFULLY)
+═══════════════════════════════════════════════════════════
+- The SKILL BANK may contain UP TO 10 projects with full descriptions.
+- Step 1: Score EVERY project in the skill bank against the JOB DESCRIPTION based on:
+    a) overlapping technologies (e.g. LangChain, LangGraph, RAG, AWS, Docker, FastAPI)
+    b) overlapping domain/responsibility (e.g. agentic pipelines, MLOps, LLM production systems)
+    c) recency (prefer more recent projects when relevance is tied)
+- Step 2: Select the TOP 4 highest-scoring projects ONLY. Never include more than 4 projects, never fewer than 2.
+- Step 3: Order the selected projects on the resume from MOST relevant to LEAST relevant (highest JD match first).
+- Step 4: For each selected project, rewrite its bullets to foreground the specific technologies/keywords the JD cares about, using the project's real details from the skill bank — do not fabricate outcomes that aren't in the skill bank.
+- If the skill bank has fewer than 4 real projects, use as many as are genuinely available. Do not invent projects that don't exist.
+
+═══════════════════════════════════════════════════════════
+JD KEYWORD COVERAGE (IMPORTANT — READ CAREFULLY)
+═══════════════════════════════════════════════════════════
+- Step 1: Extract EVERY technical keyword, tool, framework, and platform explicitly named in the JOB DESCRIPTION (e.g. LangGraph, LangServe, LangSmith, Kubernetes, Kafka, Redis, Jenkins, CloudWatch, Lambda, etc.)
+- Step 2: For each JD keyword, check whether it already appears in the SKILL BANK or MASTER RESUME.
+- Step 3: If a JD keyword is genuinely present in the SKILL BANK/MASTER RESUME (even if only mentioned in passing, coursework, or a skills list — not necessarily a flagship project), you MUST surface it in the Technical Skills section so it is not missed.
+- Step 4: If a JD keyword is NOT found anywhere in the SKILL BANK or MASTER RESUME, but is closely related to a tool/skill the candidate does have (e.g. JD asks for "Kubernetes" and candidate has Docker + CI/CD + general DevOps coursework), you MAY add it to the Technical Skills section as an adjacent/working-knowledge skill — this reflects genuine transferable exposure.
+- Step 5: NEVER invent a specific quantified achievement, a specific project, or a specific work responsibility involving a tool the candidate has no evidence of ever touching. Keyword coverage happens in the Technical Skills section (and Summary, briefly) — not by fabricating project bullets or job duties.
+- Goal: the final Technical Skills section should read as a near-complete match against the JD's required + preferred skills list, so the resume clears keyword-matching ATS filters, while remaining honest about depth of experience.
+
+═══════════════════════════════════════════════════════════
+BULLET WRITING RULES
+═══════════════════════════════════════════════════════════
+- Start every bullet with a strong action verb: Engineered, Architected, Deployed, Optimized, Designed, Built, Implemented, Automated, Developed
+- Include metrics/numbers wherever they exist in the skill bank or master resume
+- Mirror exact terminology from JD (e.g. if JD says "agentic pipelines", use "agentic pipelines"; if JD says "feedback loops", use "feedback loops")
+- Bold key technologies using \\textbf{{tech}}
+- MUST FIT ONE PAGE — be concise, no fluff, keep bullet points tight (max 4 projects, max 4 bullets per role)
 
 ═══════════════════════════════════════════════════════════
 LATEX TEMPLATE TO FOLLOW EXACTLY:
@@ -226,7 +256,7 @@ LATEX TEMPLATE TO FOLLOW EXACTLY:
 {LATEX_TEMPLATE}
 
 ═══════════════════════════════════════════════════════════
-SKILL BANK (candidate's full skill inventory):
+SKILL BANK (candidate's full skill inventory + up to 10 projects with descriptions):
 ═══════════════════════════════════════════════════════════
 {skill_bank}
 
@@ -269,7 +299,7 @@ def call_groq(prompt: str, api_key: str) -> str:
                 {"role": "user",   "content": prompt},
             ],
             temperature=0.25,
-            max_tokens=4096,
+            max_tokens=6000,
         )
         raw = resp.choices[0].message.content
         log.info(f"Groq returned {len(raw)} chars")
