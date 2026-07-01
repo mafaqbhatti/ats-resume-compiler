@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 import docx
 import pdfplumber
+import markdown
+from bs4 import BeautifulSoup
 from groq import Groq
 from dotenv import load_dotenv
 from pathlib import Path
@@ -45,14 +47,23 @@ def extract_pdf(data: bytes) -> str:
         pages = [page.extract_text() or "" for page in pdf.pages]
     return "\n".join(pages).strip()
 
+def extract_md(data: bytes) -> str:
+    raw = data.decode("utf-8", errors="ignore")
+    html = markdown.markdown(raw)
+    text = BeautifulSoup(html, "html.parser").get_text(separator="\n")
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return "\n".join(lines)
+
 def extract_text(data: bytes, filename: str) -> str:
     name = filename.lower()
     if name.endswith(".docx"):
         text = extract_docx(data)
     elif name.endswith(".pdf"):
         text = extract_pdf(data)
+    elif name.endswith(".md"):
+        text = extract_md(data)
     else:
-        raise HTTPException(400, f"Unsupported format: {filename}. Use .docx or .pdf")
+        raise HTTPException(400, f"Unsupported format: {filename}. Use .docx, .pdf, or .md")
     if len(text.strip()) < 30:
         raise HTTPException(400, f"Could not extract text from {filename}. File may be corrupted.")
     log.info(f"Extracted {len(text)} chars from {filename}")
@@ -299,7 +310,7 @@ def call_groq(prompt: str, api_key: str) -> str:
                 {"role": "user",   "content": prompt},
             ],
             temperature=0.25,
-            max_tokens=6000,
+            max_tokens=5200,
         )
         raw = resp.choices[0].message.content
         log.info(f"Groq returned {len(raw)} chars")
