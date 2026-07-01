@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeAI — ATS Resume Generator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --card: #181b24;
+      --border: #252a38;
+      --border-h: #3a4155;
+      --accent: #7c6dfa;
+      --accent-dim: #7c6dfa18;
+      --text: #e8eaf2;
+      --muted: #6b7290;
+      --green: #34d399;
+      --red: #f87171;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px 100px;
+    }
+
+    /* ── Header ── */
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .logo-icon {
+      width: 38px; height: 38px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+    .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+
+    header { text-align: center; margin-bottom: 44px; }
+    header h1 {
+      font-size: 34px; font-weight: 700;
+      letter-spacing: -1px; line-height: 1.2; margin-bottom: 12px;
+    }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); font-size: 15px; max-width: 460px; margin: 0 auto; line-height: 1.7; }
+
+    /* ── Card ── */
+    .card {
+      width: 100%; max-width: 600px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 36px;
+    }
+
+    /* ── Section label ── */
+    .sec {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.4px;
+      text-transform: uppercase; color: var(--accent);
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 18px;
+    }
+    .sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── API Key input ── */
+    .field-row { margin-bottom: 24px; }
+    .field-label {
+      font-size: 13px; font-weight: 500; margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .field-label span { font-size: 11px; color: var(--muted); font-weight: 400; }
+    .input-wrap {
+      display: flex; align-items: center;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 10px; overflow: hidden; transition: border-color 0.2s;
+    }
+    .input-wrap:focus-within { border-color: var(--accent); }
+    .input-prefix {
+      padding: 11px 14px; font-size: 12px; font-family: var(--mono);
+      color: var(--muted); background: #0d0f16; border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .input-wrap input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); font-family: var(--mono); font-size: 13px; padding: 11px 14px;
+    }
+    .input-wrap input::placeholder { color: var(--muted); }
+
+    /* ── File upload ── */
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 26px; }
+    @media (max-width: 480px) { .upload-grid { grid-template-columns: 1fr; } }
+
+    .upload-box {
+      position: relative; border: 1.5px dashed var(--border);
+      border-radius: 12px; padding: 22px 16px;
+      cursor: pointer; text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-box:hover { border-color: var(--border-h); background: #1c2030; }
+    .upload-box.has-file { border-style: solid; border-color: var(--accent); background: var(--accent-dim); }
+    .upload-box input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { width: 30px; height: 30px; margin: 0 auto 10px; color: var(--muted); transition: color 0.2s; }
+    .upload-box.has-file .upload-icon { color: var(--accent); }
+    .upload-label { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .upload-hint { font-size: 11px; color: var(--muted); }
+    .upload-name {
+      font-size: 11px; font-family: var(--mono); color: var(--accent);
+      margin-top: 6px; display: none;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .upload-box.has-file .upload-name { display: block; }
+
+    /* ── Textarea ── */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    textarea {
+      width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: var(--sans);
+      font-size: 14px; line-height: 1.6; padding: 14px 16px;
+      resize: vertical; min-height: 160px; outline: none; transition: border-color 0.2s;
+    }
+    textarea::placeholder { color: var(--muted); }
+    textarea:focus { border-color: var(--accent); }
+
+    /* ── Button ── */
+    .btn-primary {
+      width: 100%; padding: 15px; margin-top: 24px;
+      background: var(--accent); border: none; border-radius: 11px;
+      color: #fff; font-family: var(--sans); font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+    .btn-primary:active:not(:disabled) { transform: scale(0.985); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid #fff4;
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.65s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ── */
+    .error-box {
+      background: #f8717118; border: 1px solid #f8717150;
+      border-radius: 10px; padding: 14px 16px;
+      font-size: 13px; color: var(--red); margin-top: 16px; display: none;
+    }
+
+    /* ── Result ── */
+    #result-wrap { width: 100%; max-width: 600px; margin-top: 28px; display: none; }
+
+    .result-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    }
+    .result-title {
+      font-size: 14px; font-weight: 600; color: var(--green);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .result-stats { font-size: 11px; color: var(--muted); }
+
+    .btn-row { display: flex; gap: 10px; }
+    .btn-copy, .btn-dl {
+      font-size: 12px; font-weight: 500; border-radius: 7px;
+      padding: 7px 14px; cursor: pointer; transition: 0.2s;
+      border: 1px solid var(--border); font-family: var(--sans);
+    }
+    .btn-copy { background: var(--card); color: var(--muted); }
+    .btn-copy:hover { color: var(--text); border-color: var(--border-h); }
+    .btn-dl { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-dl:hover { opacity: 0.85; }
+
+    #latex-out {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+      font-family: var(--mono); font-size: 12px; color: #a9b1d6;
+      white-space: pre-wrap; word-break: break-word;
+      max-height: 480px; overflow-y: auto; line-height: 1.75;
+    }
+
+    .overleaf-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 14px; padding: 13px;
+      background: transparent; border: 1.5px solid #4DB24A;
+      border-radius: 11px; color: #4DB24A;
+      font-family: var(--sans); font-size: 14px; font-weight: 500;
+      text-decoration: none; transition: background 0.2s;
+    }
+    .overleaf-btn:hover { background: #4DB24A18; }
+
+    /* ── Steps ── */
+    .steps { display: flex; align-items: center; margin-bottom: 36px; gap: 0; }
+    .step { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+    .step.done { color: var(--text); }
+    .step-n {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; font-family: var(--mono);
+    }
+    .step.done .step-n { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step-line { width: 32px; height: 1px; background: var(--border); margin: 0 6px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h5v1.5H8V16zm0-6h2v1.5H8V10z"/></svg>
+    </div>
+    <span class="logo-text">ResumeAI</span>
+  </div>
+  <h1>Generate your <span>ATS-optimized</span> resume</h1>
+  <p>Upload your documents, paste the job description — get tailored LaTeX in seconds via Groq AI.</p>
+</header>
+
+<div class="steps">
+  <div class="step done" id="s1"><div class="step-n">1</div><span>Upload files</span></div>
+  <div class="step-line"></div>
+  <div class="step done" id="s2"><div class="step-n">2</div><span>Add JD</span></div>
+  <div class="step-line"></div>
+  <div class="step" id="s3"><div class="step-n">3</div><span>Get LaTeX</span></div>
+</div>
+
+<div class="card">
+
+  <!-- API Key -->
+  <div class="sec">Groq API Key</div>
+  <div class="field-row">
+    <div class="field-label">
+      API Key <span>get free at console.groq.com</span>
+    </div>
+    <div class="input-wrap">
+      <span class="input-prefix">Bearer</span>
+      <input type="password" id="api-key" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxx" />
+    </div>
+  </div>
+
+  <!-- Files -->
+  <div class="sec">Upload documents</div>
+  <div class="upload-grid">
+    <div class="upload-box" id="box-skill">
+      <input type="file" id="skill-file" accept=".docx,.pdf" onchange="onFile(this,'box-skill','name-skill')" />
+      <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="upload-label">Skill Bank</div>
+      <div class="upload-hint">.docx or .pdf</div>
+      <div class="upload-name" id="name-skill"></div>
+    </div>
+    <div class="upload-box" id="box-resume">
+      <input type="file" id="resume-file" accept=".docx,.pdf" onchange="onFile(this,'box-resume','name-resume')" />
+      <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="upload-label">Master Resume</div>
+      <div class="upload-hint">.docx or .pdf</div>
+      <div class="upload-name" id="name-resume"></div>
+    </div>
+  </div>
+
+  <!-- JD -->
+  <div class="divider"></div>
+  <div class="sec">Job description</div>
+  <div class="field-label">Paste the full job description <span>more detail = better match</span></div>
+  <textarea id="jd" placeholder="e.g. We are looking for an AI Engineer with experience in LangChain, LangGraph, PyTorch, AWS deployment and MLOps..."></textarea>
+
+  <button class="btn-primary" id="submit-btn" onclick="generate()">
+    <span id="btn-txt">Generate Resume</span>
+    <div class="spinner" id="spinner"></div>
+  </button>
+
+  <div class="error-box" id="err"></div>
+</div>
+
+<!-- Result -->
+<div id="result-wrap">
+  <div class="result-header">
+    <div class="result-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      LaTeX code generated successfully
+    </div>
+    <div class="btn-row">
+      <button class="btn-copy" onclick="copyLatex()">Copy all</button>
+      <button class="btn-dl" onclick="downloadLatex()">Download .tex</button>
+    </div>
+  </div>
+  <div class="result-stats" id="stats" style="margin-bottom:10px"></div>
+  <pre id="latex-out"></pre>
+  <a class="overleaf-btn" href="https://www.overleaf.com/project/new/template" target="_blank">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.888 0C5.33 0 0 5.33 0 11.888c0 6.56 5.33 11.89 11.888 11.89 6.559 0 11.889-5.33 11.889-11.89C23.777 5.33 18.447 0 11.888 0zm2.67 17.524l-4.445.012c-1.087 0-1.643-.557-1.643-1.643V8.145c0-1.086.556-1.643 1.643-1.643h4.446c1.086 0 1.643.557 1.643 1.643v7.736c0 1.086-.557 1.643-1.643 1.643z"/></svg>
+    Open Overleaf → paste LaTeX there to compile your PDF
+  </a>
+</div>
+
+<script>
+  let latexResult = '';
+
+  function onFile(input, boxId, nameId) {
+    const box = document.getElementById(boxId);
+    const nm  = document.getElementById(nameId);
+    if (input.files.length) {
+      box.classList.add('has-file');
+      nm.textContent = input.files[0].name;
+    } else {
+      box.classList.remove('has-file');
+      nm.textContent = '';
+    }
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('submit-btn');
+    const txt = document.getElementById('btn-txt');
+    const sp  = document.getElementById('spinner');
+    btn.disabled = on;
+    txt.textContent = on ? 'Generating…' : 'Generate Resume';
+    sp.style.display = on ? 'block' : 'none';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('err');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('err').style.display = 'none';
+  }
+
+  async function generate() {
+    hideError();
+    document.getElementById('result-wrap').style.display = 'none';
+
+    const apiKey    = document.getElementById('api-key').value.trim();
+    const skillFile = document.getElementById('skill-file').files[0];
+    const cvFile    = document.getElementById('resume-file').files[0];
+    const jd        = document.getElementById('jd').value.trim();
+
+    if (!apiKey)    return showError('Please enter your Groq API key.');
+    if (!skillFile) return showError('Please upload your Skill Bank file.');
+    if (!cvFile)    return showError('Please upload your Master Resume file.');
+    if (!jd)        return showError('Please paste the job description.');
+
+    setLoading(true);
+
+    try {
+      const form = new FormData();
+      form.append('skill_bank', skillFile);
+      form.append('master_resume', cvFile);
+      form.append('job_description', jd);
+      form.append('groq_api_key', apiKey);
+
+      const res = await fetch('/generate-resume', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || `Server error ${res.status}`);
+      }
+
+      if (!data.success || !data.latex_code) {
+        throw new Error('Server returned empty response. Try again.');
+      }
+
+      latexResult = data.latex_code;
+      document.getElementById('latex-out').textContent = latexResult;
+      document.getElementById('stats').textContent =
+        `Skill bank: ${data.stats.skill_bank_chars} chars | Resume: ${data.stats.resume_chars} chars | LaTeX: ${data.stats.latex_chars} chars`;
+
+      document.getElementById('result-wrap').style.display = 'block';
+      document.getElementById('s3').classList.add('done');
+      document.getElementById('result-wrap').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function copyLatex() {
+    await navigator.clipboard.writeText(latexResult);
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy all', 2000);
+  }
+
+  function downloadLatex() {
+    const blob = new Blob([latexResult], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'resume.tex';
+    a.click();
+  }
+</script>
+</body>
+</html>
